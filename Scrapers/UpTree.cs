@@ -2,10 +2,11 @@ using System.Net.Http; //using the httpClient class
 using System.Net;  //used when catching http exception
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
-using System.ComponentModel; //for parser
+using System.ComponentModel; 
+
 
 HttpClient client = new HttpClient();   //object used for the request later
-int i = 1;
+int i = 1; //keep track of page number
 int totalEvents = 0;
 int MaxRequest = 0;  //this is to stop infinite loop when http request fail but is not 404
 List<int> FailedPages = new List<int>(); //store the page number of failed pages
