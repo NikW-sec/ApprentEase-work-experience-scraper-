@@ -1,0 +1,63 @@
+using System.Net.Http; //using the httpClient class
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser; //for parser
+
+HttpClient client = new HttpClient();   //object used for the request later
+int i = 1;
+int totalEvents = 0;
+while (true)  //will only stop by break once all pages are scraped
+{
+    
+    string url;
+    if (i ==1)
+    {
+         url = $"https://uptree.co/events";
+    }
+    else
+    {
+         url= $"https://uptree.co/events/?page={i}";
+    }
+    //the part above is to srape across all avilable pages
+
+    string html;
+    try
+    {
+        html = await client.GetStringAsync(url);   //await to wait for the operation before assigning value, getstringasync is to request for the html of website
+    }
+    catch
+    {
+        break;  //break to stop the while loop when it already scraped all pages
+    }
+   
+
+    
+
+    HtmlParser parser = new HtmlParser(); //creating parser object to help turn html text into structured elements
+
+
+    var document = parser.ParseDocument(html);  //prase the html text
+    var programs = document.QuerySelectorAll(".listings-card");   // collect all class="listings-card" which represent one single program
+    foreach (var OneProgram in programs) 
+    {
+        try // in case there is a null error
+        {
+            var NameInfo  = OneProgram.QuerySelector(".listings-card__title"); //collect all the info between the <h3> and </h3> which includes all name infos
+            var DateInfo  = OneProgram.QuerySelector(".listings-card__subtitle"); 
+            var link =  $"https://uptree.co{OneProgram.QuerySelector("a").GetAttribute("href")}"; //Get attribute looks into the same line rather than the line under it, so OneProgram.QuerySelector("a") provides the line that contains the link and get arrtibute use href to get the link
+            
+            
+            Console.WriteLine(NameInfo.TextContent.Trim()); //textcontent to remove html headers and get the content between the headers and trim to remove whitespaces
+            Console.WriteLine(DateInfo.TextContent.Trim());
+            Console.WriteLine(link);
+            Console.WriteLine(); //better spacing
+            totalEvents++;
+        }
+        catch
+        {
+            throw new Exception("Error");
+        }
+        
+    }
+    i++;  //increase i to move to next page
+}
+Console.WriteLine($"Total number of events {totalEvents}");
