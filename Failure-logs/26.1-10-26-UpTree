@@ -1,0 +1,3 @@
+Infinite loop
+Problem = the while loop keeps going because of connection problem and the status code never receive 404 so it keep going to next pages without stopping despite setting up the request limit per page.
+Solution = stop the run and declare it as failure if 3 or more pages fail
