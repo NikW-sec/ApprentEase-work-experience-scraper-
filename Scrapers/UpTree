@@ -1,10 +1,14 @@
 using System.Net.Http; //using the httpClient class
+using System.Net;  //used when catching http exception
 using AngleSharp.Html.Dom;
-using AngleSharp.Html.Parser; //for parser
+using AngleSharp.Html.Parser;
+using System.ComponentModel; //for parser
 
 HttpClient client = new HttpClient();   //object used for the request later
 int i = 1;
 int totalEvents = 0;
+int MaxRequest = 0;  //this is to stop infinite loop when http request fail but is not 404
+List<int> FailedPages = new List<int>(); //store the page number of failed pages
 while (true)  //will only stop by break once all pages are scraped
 {
     
@@ -24,13 +28,35 @@ while (true)  //will only stop by break once all pages are scraped
     {
         html = await client.GetStringAsync(url);   //await to wait for the operation before assigning value, getstringasync is to request for the html of website
     }
-    catch
+    catch (HttpRequestException ex)   //the http exception is sotred as ex
     {
-        break;  //break to stop the while loop when it already scraped all pages
+        if (ex.StatusCode == HttpStatusCode.NotFound) //status code is http code like 404, 100. This checks if the code is 404 which means the next page does not exist
+        {
+            break;  //break to stop the while loop when it already scraped all pages
+        }
+        else
+        {
+            if (MaxRequest != 3)
+            {
+                MaxRequest++;
+                await Task.Delay(3000);  //pause the program for 3 seconds (3000 milli) to increase chance of recovery
+                continue; //run the loop back to request again as there are still pages left
+            }
+            else
+            {
+                FailedPages.Add(i);
+                MaxRequest = 0; //reset max
+                i++;  //move to next page
+                continue;
+
+            }
+            
+        }
+
+        
     }
    
 
-    
 
     HtmlParser parser = new HtmlParser(); //creating parser object to help turn html text into structured elements
 
@@ -59,5 +85,11 @@ while (true)  //will only stop by break once all pages are scraped
         
     }
     i++;  //increase i to move to next page
+    MaxRequest = 0; //reset max request so each page can have three reload
 }
 Console.WriteLine($"Total number of events {totalEvents}");
+if (FailedPages.Count != 0)
+{
+    Console.WriteLine(string.Join(",",FailedPages));
+}
+
