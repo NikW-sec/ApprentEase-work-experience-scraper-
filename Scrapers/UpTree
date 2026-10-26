@@ -11,6 +11,10 @@ int MaxRequest = 0;  //this is to stop infinite loop when http request fail but 
 List<int> FailedPages = new List<int>(); //store the page number of failed pages
 while (true)  //will only stop by break once all pages are scraped
 {
+    if (FailedPages.Count ==3)
+    {
+        throw new Exception ("This run has failed");
+    }
     
     string url;
     if (i ==1)
@@ -92,4 +96,3 @@ if (FailedPages.Count != 0)
 {
     Console.WriteLine(string.Join(",",FailedPages));
 }
-
