@@ -2,14 +2,14 @@
 bin/
 obj/
 
-# Local events history
+# Local events history, used to store links of previous runs
 EventLinks.txt
 
-# Local configuration and secrets
+
 .env
 local.settings.json
 
-# Personal IDE files
+
 .vs/
 *.user
 *.suo
