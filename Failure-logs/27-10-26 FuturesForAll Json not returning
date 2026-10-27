@@ -16,3 +16,5 @@ Unhandled exception. System.Text.Json.JsonReaderException: 'S' is an invalid sta
 {"pageNumber":1,"pageSize":12,"hasNextPage":false,"totalPages":1,"totalNumberOfItems":12,"items":[{"userCanApply":null,"userTargeting":0,"userTargetingString":null,"opportunityId":"EBA93EAE-D523-4753-
 
 Http request is sucessful but no Json file is returned
+problem = no await when calling method, so there isn't enough time for the program to retrieve the json file
+Solution = string json =  GettingJson();   -> string json = await GettingJson();
