@@ -1,2 +1,2 @@
--sorting events by subject?
--store records in a file so that it can show only the new ones
+-deploy to azure
+-change .gitignore
