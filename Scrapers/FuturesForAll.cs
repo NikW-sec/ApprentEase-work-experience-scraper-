@@ -16,7 +16,7 @@ https://api.futuresforall.org/portal/opportunities/search?Filter=IsGroupBookable
 
 
 
-async Task GettingJson() //this method is for requesting and getting the json file
+async Task<string> GettingJson() //this method is for requesting and getting the json file  , Task<string> means it will return a string and the Task allows pause
 {
 
     HttpClient client = new HttpClient();
@@ -45,6 +45,8 @@ async Task GettingJson() //this method is for requesting and getting the json fi
     {
         throw new Exception("no Json fetched");
     }
+    
+    return json;
 
 }
 
@@ -61,7 +63,7 @@ void scrap(string json) //this method is to scrap the event details from the jso
         {
             var CurrentEvent = opportunities[i];
             string eventName = CurrentEvent.GetProperty("opportunityName").ToString();
-            string orginationName = CurrentEvent.GetProperty("organisationName").ToString();
+            string orginationName = CurrentEvent.GetProperty("organisation").GetProperty("organisationName").ToString();;
             string type = CurrentEvent.GetProperty("opportunityTypeName").ToString();
             string sector = CurrentEvent.GetProperty("sectorName").ToString();
             string startDate = CurrentEvent.GetProperty("opportunityStartAt").ToString();
@@ -71,6 +73,18 @@ void scrap(string json) //this method is to scrap the event details from the jso
         }
     }
 }
+
+
+async Task main()
+{
+    string json = await GettingJson();
+    scrap(json);
+    foreach(var i in listOfEvents)
+    {
+        Console.WriteLine(i.Display());
+    }
+}
+await main();
 
 class Event
 {
@@ -97,7 +111,7 @@ class Event
         startDate = StartDate;
         days = Days;
     }
-    string Display() //for local testing
+    public string Display() //for local testing
     {
         return$"Event name = {eventName}\n Organisation name = {organisationName}\n type = {type}\n Sector = {sector}\n Start date = {startDate}\n Duration = {days} days";
     }
