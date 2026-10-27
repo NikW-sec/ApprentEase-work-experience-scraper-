@@ -11,7 +11,7 @@ int i = 1; //keep track of page number
 
 int MaxRequest = 0;  //this is to stop infinite loop when http request fail but is not 404
 
-List<Events> ListOfEvents = new List<Events>();
+List<Events> ListOfEvents = new List<Events>(); //this stores only the new events
 List<int> FailedPages = new List<int>(); //store the page number of failed pages
 
 
@@ -23,7 +23,7 @@ List<string> CurrentLinks = new List<string>();  //store links of this run
 List<string> PreviousLinks = new List<string>();   //this will store all the links that is in the previous runs
 void GetLastRun()
 {
-    try    // catch error if the file does not exist
+    try    
     {
         using (StreamReader reader = new StreamReader("EventLinks.txt"))
         {
@@ -37,7 +37,7 @@ void GetLastRun()
 
         }
     }
-    catch (Exception ex)  
+    catch (FileNotFoundException)  // catch error if the file does not exist, will happen in the first run
     {
         return; 
     }
@@ -95,6 +95,23 @@ async Task scraping()   //async to allow pause in this method
 
             
         }
+        catch (TaskCanceledException)   // timeout error
+        {
+             if (MaxRequest != 3)
+                {
+                    MaxRequest++;
+                    await Task.Delay(3000);  //pause the program for 3 seconds (3000 milli) to increase chance of recovery
+                    continue; //run the loop back to request again as there are still pages left
+                }
+                else
+                {
+                    FailedPages.Add(i);
+                    MaxRequest = 0; //reset max
+                    i++;  //move to next page
+                    continue;
+
+                }
+        }
     
         HtmlParser parser = new HtmlParser(); //creating parser object to help turn html text into structured elements
 
@@ -127,6 +144,7 @@ async Task scraping()   //async to allow pause in this method
                 throw new Exception(ex.ToString());
             }
             
+            
         }
         i++;  //increase i to move to next page
         MaxRequest = 0; //reset max request so each page can have three reload
@@ -134,7 +152,7 @@ async Task scraping()   //async to allow pause in this method
 }
 
 
-void displayEvents()  //for local testing only
+void displayEvents()  //for local testing only, display all new events
 {
     foreach (var j in ListOfEvents)
     {
@@ -155,14 +173,16 @@ void ClearLinks()
 //save the links of the current run
 void SaveCurrentLinks()
 {
-    ClearLinks();
-    foreach (string k in CurrentLinks)
+    
+    
+    using (StreamWriter writer = new StreamWriter("EventLinks.txt",true))  //set the stream writer to append mode everytime
     {
-        using (StreamWriter writer = new StreamWriter("EventLinks.txt",true))  //set the stream writer to append mode everytime
-        {
-            writer.WriteLine(k); //save only the link, so this can be used to filter which ones are new later
+        foreach (var k in CurrentLinks)
+        {   
+         writer.WriteLine(k); //save only the link, so this can be used to filter which ones are new later
         }
     }
+    
 }
 
 
@@ -172,11 +192,11 @@ string NumberAndError()
 {   
     if (FailedPages.Count != 0)
     {
-        return $"Total number of events {ListOfEvents.Count}\n Failed pages = {string.Join(",",FailedPages)}";
+        return $"Total number of new events {ListOfEvents.Count}\n Failed pages = {string.Join(",",FailedPages)}";
     }
     else
     {
-        return $"Total number of events {ListOfEvents.Count}";
+        return $"Total number of new events {ListOfEvents.Count}. No page error";
     }
      
 }
@@ -187,6 +207,10 @@ async Task main()
     GetLastRun();
     await scraping();  // there is pause in this method so awair allows waiting
     displayEvents();
+    if (FailedPages.Count ==0)  //only clear when there is no fail pages, because if links are cleared when some pages failed, it will count the old ones that aren't loaded as new
+    {
+        ClearLinks();
+    }
     SaveCurrentLinks();
     Console.WriteLine(NumberAndError());
 
@@ -218,4 +242,5 @@ class Events //storing event details
     }
 
 }
+
 
