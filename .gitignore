@@ -1,0 +1,15 @@
+# Generated build files
+bin/
+obj/
+
+# Local events history
+EventLinks.txt
+
+# Local configuration and secrets
+.env
+local.settings.json
+
+# Personal IDE files
+.vs/
+*.user
+*.suo
