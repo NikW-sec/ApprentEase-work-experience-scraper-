@@ -1,3 +1,2 @@
--store failure logs in text file
--sorting events in terms of time
 -sorting events by subject?
+-store records in a file so that it can show only the new ones
