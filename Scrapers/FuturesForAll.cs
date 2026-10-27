@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 string url = """
 https://api.futuresforall.org/portal/opportunities/search?Filter=IsGroupBookable%20ne%20true&SortBy=AdvertiseStartAt&SortDirection=Ascending&PageSize=12&PageNumber=1&Sectors=11&Sectors=1&Sectors=3&Sectors=17&SearchFields=SectorName,Organisation/OrganisationName,OpportunityName
 """; //this url will return Json instead of html
+//sectors of this url = Engineering Business & Sales  Accounting, Banking & Finance Digital, IT & Computing
 
 
 
@@ -50,7 +51,7 @@ async Task<string> GettingJson() //this method is for requesting and getting the
 
 }
 
-
+List<string> PreviousLinks = new List<string>();
 List<Event> listOfEvents = new List<Event>();
 void scrap(string json) //this method is to scrap the event details from the json file and store them in a list
 {
@@ -59,30 +60,76 @@ void scrap(string json) //this method is to scrap the event details from the jso
         var roots = document.RootElement;  // this get the outmost Json objectss of the document
         var opportunities = roots.GetProperty("items"); //get property method belongs to Json elements, "items" in the Json file here stores the data we want, so opportunities now store the Json values of the "items" object
         int OpportunitiesCount = opportunities.GetArrayLength();
-        for (int i =0;i<OpportunitiesCount;i++)
+        using (StreamWriter writer = new StreamWriter("EventLinks2.txt",true)) //append mode
         {
-            var CurrentEvent = opportunities[i];
-            string eventName = CurrentEvent.GetProperty("opportunityName").ToString();
-            string orginationName = CurrentEvent.GetProperty("organisation").GetProperty("organisationName").ToString();;
-            string type = CurrentEvent.GetProperty("opportunityTypeName").ToString();
-            string sector = CurrentEvent.GetProperty("sectorName").ToString();
-            string startDate = CurrentEvent.GetProperty("opportunityStartAt").ToString();
-            string  days = CurrentEvent.GetProperty("opportunityDurationDays").ToString();
-            listOfEvents.Add(new Event(eventName,orginationName,type,sector,startDate,days));
+            for (int i =0;i<OpportunitiesCount;i++)
+            {
+                var CurrentEvent = opportunities[i];
+                string link = $"https://finder.futuresforall.org/opportunity-detail/{CurrentEvent.GetProperty("opportunityId")}"; //The Json file does not directly provide the url but it combines with the websites path with the id to produce the url to the event page
+                writer.WriteLine(link);
+                if (!PreviousLinks.Contains(link)) //checking the link first improves runtime 
+                {
+                    string eventName = CurrentEvent.GetProperty("opportunityName").ToString();
+                    string orginationName = CurrentEvent.GetProperty("organisation").GetProperty("organisationName").ToString();;
+                    string type = CurrentEvent.GetProperty("opportunityTypeName").ToString();
+                    string sector = CurrentEvent.GetProperty("sectorName").ToString();
+                    string startDate = CurrentEvent.GetProperty("opportunityStartAt").ToString();
+                    string  days = CurrentEvent.GetProperty("opportunityDurationDays").ToString();
+                    
 
+                    listOfEvents.Add(new Event(eventName,orginationName,type,sector,startDate,days,link));
+                }
+
+            }
         }
     }
 }
 
 
+void GetLastRun()
+{
+   try
+   {
+    using (StreamReader reader = new StreamReader("EventLinks2.txt"))
+    {
+        string? CurrentLine = reader.ReadLine();
+        while (CurrentLine != null)
+        {
+            PreviousLinks.Add(CurrentLine);
+            CurrentLine = reader.ReadLine();
+        }
+    }
+   }
+   catch //cathch error when file doesn't exist, happen in every first run
+    {
+        return;
+    }
+}
+
+void ClearLinks()
+{
+    using (StreamWriter writer = new StreamWriter("EventLinks2.txt",false)) //overwrite mode
+    {
+        Console.WriteLine();
+    }
+}
+
+
+
+
 async Task main()
 {
     string json = await GettingJson();
+    GetLastRun();
+    ClearLinks();
     scrap(json);
     foreach(var i in listOfEvents)
     {
         Console.WriteLine(i.Display());
     }
+    int numberOfEvent = listOfEvents.Count;
+    Console.WriteLine(numberOfEvent);
+
 }
 await main();
 
@@ -94,6 +141,7 @@ class Event
     private string sector;
     private string startDate;
     private string days;
+    private string link;
 
     public string EventName {get{return eventName;}} //read only
     public string OrganisationName {get{return organisationName;}}
@@ -101,8 +149,9 @@ class Event
     public string Sector {get{return sector;}}
     public string StartDate {get{return sector;}}
     public string Days {get{return sector;}}
+    public string Link {get{return link;}}
 
-    public Event(string EventName,string OrganisationNmae, string Type, string Sector, string StartDate, string Days)
+    public Event(string EventName,string OrganisationNmae, string Type, string Sector, string StartDate, string Days,string Links)
     {
         eventName = EventName;
         organisationName = OrganisationNmae;
@@ -110,10 +159,12 @@ class Event
         sector = Sector;
         startDate = StartDate;
         days = Days;
+        link = Links;
+
     }
     public string Display() //for local testing
     {
-        return$"Event name = {eventName}\n Organisation name = {organisationName}\n type = {type}\n Sector = {sector}\n Start date = {startDate}\n Duration = {days} days";
+        return$"Event name = {eventName}\n Organisation name = {organisationName}\n type = {type}\n Sector = {sector}\n Start date = {startDate}\n Duration = {days} days\n Link = {link}\n";
     }
 
 }
