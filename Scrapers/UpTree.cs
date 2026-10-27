@@ -2,14 +2,17 @@ using System.Net.Http; //using the httpClient class
 using System.Net;  //used when catching http exception
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
-using System.ComponentModel; 
-
+using System.ComponentModel;
+using AngleSharp.Dom.Events;
 
 HttpClient client = new HttpClient();   //object used for the request later
 int i = 1; //keep track of page number
-int totalEvents = 0;
+
 int MaxRequest = 0;  //this is to stop infinite loop when http request fail but is not 404
+
+List<Events> ListOfEvents = new List<Events>();
 List<int> FailedPages = new List<int>(); //store the page number of failed pages
+
 while (true)  //will only stop by break once all pages are scraped
 {
     if (FailedPages.Count ==3)
@@ -61,8 +64,6 @@ while (true)  //will only stop by break once all pages are scraped
         
     }
    
-
-
     HtmlParser parser = new HtmlParser(); //creating parser object to help turn html text into structured elements
 
 
@@ -77,11 +78,9 @@ while (true)  //will only stop by break once all pages are scraped
             var link =  $"https://uptree.co{OneProgram.QuerySelector("a").GetAttribute("href")}"; //Get attribute looks into the same line rather than the line under it, so OneProgram.QuerySelector("a") provides the line that contains the link and get arrtibute use href to get the link
             
             
-            Console.WriteLine(NameInfo.TextContent.Trim()); //textcontent to remove html headers and get the content between the headers and trim to remove whitespaces
-            Console.WriteLine(DateInfo.TextContent.Trim());
-            Console.WriteLine(link);
-            Console.WriteLine(); //better spacing
-            totalEvents++;
+            
+            Events Object1 = new Events(NameInfo.TextContent.Trim(),DateInfo.TextContent.Trim(),link);  //create a new events object everytime
+            ListOfEvents.Add(Object1); //add the current event object to the list
         }
         catch
         {
@@ -92,8 +91,41 @@ while (true)  //will only stop by break once all pages are scraped
     i++;  //increase i to move to next page
     MaxRequest = 0; //reset max request so each page can have three reload
 }
-Console.WriteLine($"Total number of events {totalEvents}");
+
+
+foreach (var j in ListOfEvents)
+{
+    Console.WriteLine(j.showEvent()); //j represent a single event object, and show event will display the content of that object
+}
+
+Console.WriteLine($"Total number of events {ListOfEvents.Count}");
 if (FailedPages.Count != 0)
 {
     Console.WriteLine(string.Join(",",FailedPages));
+}
+
+
+class Events //sorting events
+{
+    private string name;
+    private string date;
+    private string link;
+
+    public string Name{get{return name;} }  // no setter is used so  the fields to read only
+    public string Date{get{return date;} }
+    public string Link{get{return link;} }
+
+
+
+    public Events(string name, string date, string link)
+    {
+        this.name = name;
+        this.date = date;
+        this.link = link;
+    }
+    public string showEvent()
+    {
+        return $"{name}\n{date}\n{link}\n";
+    }
+
 }
