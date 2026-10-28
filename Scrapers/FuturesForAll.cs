@@ -23,18 +23,18 @@ async Task<string> GettingJson(string url) //this method is for requesting and g
     HttpClient client = new HttpClient();
     int max = 0;
     string? json = null;
-    while(max <3)
+    while(max <3) //max 3 request attempt per page
     {
         try
         {
         
-         json = await client.GetStringAsync(url);
+         json = await client.GetStringAsync(url); //await to wait for the request
          //Console.WriteLine(json);
          break;
         }
         catch (HttpRequestException ex)
         {
-            if (ex.StatusCode == HttpStatusCode.NotFound)
+            if (ex.StatusCode == HttpStatusCode.NotFound)  //if it is 404, there is no point of requesting again
             {
                 break;
             }
@@ -51,12 +51,12 @@ async Task<string> GettingJson(string url) //this method is for requesting and g
 
 }
 
-List<string> PreviousLinks = new List<string>();
+List<string> PreviousLinks = new List<string>(); //links of last run
 List<string> CurrentLinks = new List<string>();
-List<Event> listOfEvents = new List<Event>();
+List<Event> listOfEvents = new List<Event>(); //store event object, each representing one event
 bool? scrap(string json) //this method is to scrap the event details from the json file and store them in a list
 {
-    bool? NextPage = null;
+    bool? NextPage = null; //a json field that stores true or false depending if there is next page
     using (JsonDocument document =  JsonDocument.Parse(json))
     {
         var roots = document.RootElement;  // this get the outmost Json objectss of the document
@@ -64,28 +64,30 @@ bool? scrap(string json) //this method is to scrap the event details from the js
         NextPage = roots.GetProperty("hasNextPage").GetBoolean(); //return true of false
         int OpportunitiesCount = opportunities.GetArrayLength();
 
-            for (int i =0;i<OpportunitiesCount;i++)
+            for (int i =0;i<OpportunitiesCount;i++) //loop through each event in opportunities
             {
                 var CurrentEvent = opportunities[i];
                 string link = $"https://finder.futuresforall.org/opportunity-detail/{CurrentEvent.GetProperty("opportunityId")}"; //The Json file does not directly provide the url but it combines with the websites path with the id to produce the url to the event page
                 CurrentLinks.Add(link);
                 if (!PreviousLinks.Contains(link)) //checking the link first improves runtime 
                 {
-                    string eventName = CurrentEvent.GetProperty("opportunityName").ToString();
-                    string orginationName = CurrentEvent.GetProperty("organisation").GetProperty("organisationName").ToString();;
+                    string eventName = CurrentEvent.GetProperty("opportunityName").ToString(); //geting the value of the key "opportunityName"
+                    string orginationName = CurrentEvent.GetProperty("organisation").GetProperty("organisationName").ToString();; //two layers because value is an array
                     string type = CurrentEvent.GetProperty("opportunityTypeName").ToString();
                     string sector = CurrentEvent.GetProperty("sectorName").ToString();
-                    string startDate = CurrentEvent.GetProperty("opportunityStartAt").ToString();
+                    string startDate = CurrentEvent.GetProperty("opportunityStartAt").ToString(); //original output 2026-11-12T00:00:00+00:00, the ending part is not useful, I will remove it
+                    startDate = startDate.Replace("T00:00:00+00:00","");
+
                     string  days = CurrentEvent.GetProperty("opportunityDurationDays").ToString();
                     
 
-                    listOfEvents.Add(new Event(eventName,orginationName,type,sector,startDate,days,link));
+                    listOfEvents.Add(new Event(eventName,orginationName,type,sector,startDate,days,link)); //create and add the new event object to the list
                 }
 
             }
         }
     
-    return NextPage;
+    return NextPage; //boolean, if there is next page or now
 }
 
 void UploadNewLinks(List<string> listOfLinks)
@@ -130,24 +132,24 @@ void GetLastRun()
 async Task main()
 {
 
-    int i = 1;
+    int i = 1; //keep track of page number
     GetLastRun();
     string? json = null;
-    do
+    do//this code will run atleast once
     {
        json = await GettingJson($"https://api.futuresforall.org/portal/opportunities/search?Filter=IsGroupBookable%20ne%20true&SortBy=AdvertiseStartAt&SortDirection=Ascending&PageSize=12&PageNumber={i}&Sectors=11&Sectors=1&Sectors=3&Sectors=17&SearchFields=SectorName,Organisation/OrganisationName,OpportunityName");
        i++;
        //Console.WriteLine(i);
     }
-    while(scrap(json) == true);
+    while(scrap(json) == true); //scrap returns true if there is next page
     
-    UploadNewLinks(CurrentLinks);
+    UploadNewLinks(CurrentLinks); 
     
 
 
   
 
-
+    //local testing
     foreach(var k in listOfEvents)
     {
         Console.WriteLine(k.Display());
@@ -176,7 +178,7 @@ class Event
     public string Days {get{return days;}}
     public string Link {get{return link;}}
 
-    public Event(string EventName,string OrganisationNmae, string Type, string Sector, string StartDate, string Days,string Links)
+    public Event(string EventName,string OrganisationNmae, string Type, string Sector , string StartDate, string Days,string Links)
     {
         eventName = EventName;
         organisationName = OrganisationNmae;
