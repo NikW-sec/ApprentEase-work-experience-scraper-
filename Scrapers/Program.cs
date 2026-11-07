@@ -1,90 +1,117 @@
 using AngleSharp.Dom.Events;
 using Microsoft.VisualBasic;
 using System.Net.Http.Json;
+using System.Net.Mime;
 UpTreeScraper uptree = new UpTreeScraper(); //object for the UpTree scraper
 await uptree.main();
 List<UpTreeScraper.Events> uptreeEvents = uptree.ListOfEvents;
 
 FuturesForAllScraper futures = new FuturesForAllScraper();
-//await futures.main();
-//List<FuturesForAllScraper.Event> futuresEvents = futures.listOfEvents;
+await futures.main();
+List<FuturesForAllScraper.Event> futuresEvents = futures.listOfEvents;
 
 
 string webhookUrl;
 try
 {
      webhookUrl = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_URL");
+     // as I entered the $env:DISCORD_WEBHOOK_URL = "TheURL" in ther terminal eariler, the url is stored as an variable and the envrironment line uses the value
+     //this is to improve security, so the webhook url stays local and others can't see it 
      if (string.IsNullOrWhiteSpace(webhookUrl))
     {
         throw new Exception ("no url is provided");
     }
 }
-        // as I entered the $env:DISCORD_WEBHOOK_URL = "TheURL" in ther terminal eariler, the url is stored as an variable and the envrironment line uses the value
-        //this is to improve security, so the webhook url stays local and others can't see it 
+        
 catch (Exception ex)
 {
   throw new Exception("Error with webhook url ");
 }
 
+
+
 // Create the object that sends HTTP requests.
 using HttpClient client = new HttpClient();
-List<string>? uptreeContent = new List<string>();
-foreach (var k in uptreeEvents)
+
+async Task Sending(string platform,string name,string date,string link, string? organisation= null,string? type = null, string? sector = null,string?days = null) // the first 4 parameters are common for both but the rest will be null for uptree
 {
-    uptreeContent.Add(k.name.ToString());
-    uptreeContent.Add(k.date.ToString());
-    uptreeContent.Add(k.link.ToString());
-}
-List<string> tempoEvents = new List<string>();
-int counter = 0; //because each event has three component, when the counter hits 3 we push the message to discord
-//can't send all at once because discord have limit on character per message
-bool sent = false; //used to show if the current event is sucessfully sent or not
-foreach (string k in uptreeContent)
-{
-    tempoEvents.Add(k);
-    counter ++;
-    if (counter%3==0)
+    //can't send all at once because discord have limit on character per message
+    bool sent = false; //used to show if the current event is sucessfully sent or not
+    
+    var message = new{content = ""};
+    if(platform.ToLower() == "uptree")
     {
-        sent = false;
-        var message = new
+        message = new
         {
-            content = string.Join("\n",tempoEvents) + "\n" // \n for spacing
+            content = $"{name}\n{date}\n{link}"
+            
             
         };
-        for (int i=0;i<3;i++)  //max three tries per request
+    }
+    else
+    {
+        message = new
         {
-            try
-            {
-                //message is like an object and content is a variable inside the object
-                //the reason why this is used over pure string is because discord requires json format, when i try to send a string alone, it returns 400 bad request
-                using HttpResponseMessage response = await client.PostAsJsonAsync(webhookUrl + "?wait=true", message); //response store discord's http response
-                //client send the message to the webhookurl 
-                //using ,automatically removes the resources in response when the current scope ends, just like the using statment in streamwriter 
-                response.EnsureSuccessStatusCode(); // continues if the HTTP status code indicates success (200–299), otherwise throws an exception.
+            content = $"{name}\n{date}\n{link}\n{organisation}\n{type}\n{sector}\n{days}\n"
             
-                Console.WriteLine("sent");
-                sent = true;
-                await Task.Delay(2000);
-                break;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"ERRor because {message}");
-                Console.Write(ex);
-                await Task.Delay(10000); //10 seconds delay to avoid rate limit
-
-            }
-         
-        }
-        if (sent == false)
-        {
-            using (StreamWriter writer = new StreamWriter("failsureEvents.txt"))
-            {
-                Console.WriteLine(message);
-            }
-        }
-        tempoEvents.Clear();
-
+        };
+        
 
     }
+    
+    for (int i=0;i<3;i++)  //max three tries per request
+    {
+        try
+        {
+            //message is like an object and content is a variable inside the object
+            //the reason why this is used over pure string is because discord requires json format, when i try to send a string alone, it returns 400 bad request
+            using HttpResponseMessage response = await client.PostAsJsonAsync(webhookUrl + "?wait=true", message); //response store discord's http response
+            //client send the message to the webhookurl 
+            //using ,automatically removes the resources in response when the current scope ends, just like the using statment in streamwriter 
+            response.EnsureSuccessStatusCode(); // continues if the HTTP status code indicates success (200–299), otherwise throws an exception.
+        
+            Console.WriteLine("sent");
+            sent = true;
+            await Task.Delay(2000);
+            break;
+        }
+        catch (Exception ex)
+        {
+            
+            Console.Write(ex);
+            await Task.Delay(10000); //10 seconds delay to avoid rate limit
+
+        }
+    
+    }
+    if (sent == false)
+    {
+        using (StreamWriter writer = new StreamWriter("failsureEvents.txt",true)) //append mode
+        {
+            writer.WriteLine(platform);
+            writer.WriteLine(message.content); //.content allow to store only the text  , not including the object's wrapper
+            writer.WriteLine(DateTime.Now.ToString()); //also save the time of failure
+            writer.WriteLine();
+
+        }
+    }
 }
+
+async Task UpTree()
+{
+    foreach (var k in uptreeEvents)
+    {
+        await Sending("UpTree",k.Name,k.Date,k.Link);
+    }
+}
+async Task FuturesForAll()
+{
+    foreach(var k in futuresEvents)
+    {
+        await Sending("FuturesForAll",k.EventName,k.OrganisationName,k.Type,k.Sector,k.StartDate,k.Days,k.Link);
+    }
+}
+
+
+await UpTree();
+
