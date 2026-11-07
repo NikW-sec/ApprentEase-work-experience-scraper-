@@ -154,18 +154,13 @@ public class FuturesForAllScraper
         //local testing
         foreach(var k in listOfEvents)
         {
-            Console.WriteLine(k.Display());
+            //Console.WriteLine(k.Display());
         }
         int numberOfEvent = listOfEvents.Count;
-        if (numberOfEvent ==0)
-        {
-            Console.WriteLine("No new event");
-        }
-        else
-        {
-            Console.WriteLine($"Number of new events ={numberOfEvent}");
-        }
-        //Console.WriteLine(listOfEvents.Count);
+        
+        Console.WriteLine($"FuturesForAll - Total number of new events {listOfEvents.Count}");
+        
+        
 
     }
     
