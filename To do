@@ -2,3 +2,7 @@
 -change .gitignore
 -new file listing download requirements
 
+stages
+1.individual scraper
+2.Program.cs to work as one code/file
+3.Linked to discord
