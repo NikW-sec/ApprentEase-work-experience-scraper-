@@ -193,11 +193,11 @@ public class UpTreeScraper
     {   
         if (FailedPages.Count != 0)
         {
-            return $"Total number of new events {ListOfEvents.Count}\n Failed pages = {string.Join(",",FailedPages)}";
+            return $"UpTree - Total number of new events {ListOfEvents.Count}\n Failed pages = {string.Join(",",FailedPages)}";
         }
         else
         {
-            return $"Total number of new events {ListOfEvents.Count}. No page error";
+            return $"UpTree - Total number of new events {ListOfEvents.Count}";
         }
         
     }
@@ -207,7 +207,7 @@ public class UpTreeScraper
     {
         GetLastRun();
         await scraping();  // there is pause in this method so awair allows waiting
-        displayEvents();
+        //displayEvents();
         if (FailedPages.Count ==0)  //only clear when there is no fail pages, because if links are cleared when some pages failed, it will count the old ones that aren't loaded as new
         {
             ClearLinks();
@@ -232,6 +232,7 @@ public class UpTreeScraper
         public string Date{get{return date;} }
         public string Link{get{return link;} }
 
+
         public Events(string name, string date, string link)
         {
             this.name = name;
@@ -244,4 +245,3 @@ public class UpTreeScraper
         }
     }
 }
-
