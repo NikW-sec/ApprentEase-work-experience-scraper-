@@ -28,7 +28,7 @@ public class UpTreeScraper
         {
             using (StreamReader reader = new StreamReader("EventLinks.txt"))
             {
-                string PastLink = reader.ReadLine();
+                string? PastLink = reader.ReadLine();
                 while (PastLink!= null)
                 {
                     PreviousLinks.Add(PastLink);
@@ -73,11 +73,15 @@ public class UpTreeScraper
             {
                 if (ex.StatusCode == HttpStatusCode.NotFound) //status code is http code like 404, 100. This checks if the code is 404 which means the next page does not exist
                 {
+                    if (i ==1)
+                    {
+                        throw new Exception ("404 on the first page,this run has failed");
+                    }
                     break;  //break to stop the while loop when it already scraped all pages
                 }
                 else
                 {
-                    if (MaxRequest != 3)
+                    if (MaxRequest <3) //max 3 retires
                     {
                         MaxRequest++;
                         await Task.Delay(3000);  //pause the program for 3 seconds (3000 milli) to increase chance of recovery
@@ -98,7 +102,7 @@ public class UpTreeScraper
             }
             catch (TaskCanceledException)   // timeout error
             {
-                if (MaxRequest != 3)
+                if (MaxRequest < 3)
                     {
                         MaxRequest++;
                         await Task.Delay(3000);  //pause the program for 3 seconds (3000 milli) to increase chance of recovery
@@ -205,6 +209,12 @@ public class UpTreeScraper
 
     public async Task main()
     {
+
+        ListOfEvents.Clear();
+        FailedPages.Clear();
+        CurrentLinks.Clear();
+        PreviousLinks.Clear();
+
         GetLastRun();
         await scraping();  // there is pause in this method so awair allows waiting
         //displayEvents();
