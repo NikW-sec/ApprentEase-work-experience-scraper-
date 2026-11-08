@@ -1,13 +1,9 @@
 using System.Net.Http; 
 using System.Net;  
 using System.Text.Json; //for scraping Json
-using AngleSharp.Html.Dom;
-using AngleSharp.Html.Parser;
 using System.ComponentModel;
-using AngleSharp.Dom.Events;
 using System.Diagnostics.CodeAnalysis;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.VisualBasic;
 using System.Runtime.CompilerServices;
 using System.Globalization;
 
@@ -16,23 +12,24 @@ using System.Globalization;
 //this url will return Json instead of html
 //sectors of this url = Engineering Business & Sales  Accounting, Banking & Finance Digital, IT & Computing
 
+
 public class FuturesForAllScraper
 {
-
+    HttpClient client = new HttpClient();
     async Task<string> GettingJson(string url) //this method is for requesting and getting the json file  , Task<string> means it will return a string and the Task allows pause
     {
-
-        HttpClient client = new HttpClient();
+        
+        
+        string? json =null;
         int max = 0;
-        string? json = null;
         while(max <3) //max 3 request attempt per page
         {
             try
             {
             
-            json = await client.GetStringAsync(url); //await to wait for the request
-            //Console.WriteLine(json);
-            break;
+             json = await client.GetStringAsync(url); //await to wait for the request
+             //Console.WriteLine(json);
+             break;
             }
             catch (HttpRequestException ex)
             {
@@ -55,6 +52,7 @@ public class FuturesForAllScraper
 
     List<string> PreviousLinks = new List<string>(); //links of last run
     List<string> CurrentLinks = new List<string>();
+
     public List<Event> listOfEvents = new List<Event>(); //store event object, each representing one event
     bool? scrap(string json) //this method is to scrap the event details from the json file and store them in a list
     {
@@ -133,15 +131,20 @@ public class FuturesForAllScraper
 
     public async Task main()
     {
+        //clear the variables incase the main function is being used more than one time
+        PreviousLinks.Clear();
+        CurrentLinks.Clear();
+        listOfEvents.Clear();
+
 
         int i = 1; //keep track of page number
         GetLastRun();
         string? json = null;
         do//this code will run atleast once
         {
-        json = await GettingJson($"https://api.futuresforall.org/portal/opportunities/search?Filter=IsGroupBookable%20ne%20true&SortBy=AdvertiseStartAt&SortDirection=Ascending&PageSize=12&PageNumber={i}&Sectors=11&Sectors=1&Sectors=3&Sectors=17&SearchFields=SectorName,Organisation/OrganisationName,OpportunityName");
-        i++;
-        //Console.WriteLine(i);
+         json = await GettingJson($"https://api.futuresforall.org/portal/opportunities/search?Filter=IsGroupBookable%20ne%20true&SortBy=AdvertiseStartAt&SortDirection=Ascending&PageSize=12&PageNumber={i}&Sectors=11&Sectors=1&Sectors=3&Sectors=17&SearchFields=SectorName,Organisation/OrganisationName,OpportunityName"); //increasing i increases the page number
+         i++;
+         //Console.WriteLine(i);
         }
         while(scrap(json) == true); //scrap returns true if there is next page
         
