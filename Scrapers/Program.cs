@@ -3,7 +3,7 @@ using Microsoft.VisualBasic;
 using System.Net.Http.Json;
 using System.Net.Mime;
 
-string webhookUrl;
+string? webhookUrl;
 try
 {
      webhookUrl = Environment.GetEnvironmentVariable("DISCORD_WEBHOOK_URL");
@@ -107,6 +107,7 @@ async Task UpTree()
     {
         await Sending("UpTree",k.Name,k.Date,k.Link);
     }
+    UpTreeSaveCurrentLinks();
 }
 async Task FuturesForAll()
 {
@@ -114,7 +115,35 @@ async Task FuturesForAll()
     {
         await Sending("FuturesForAll",k.EventName,k.StartDate,k.Link,k.OrganisationName,k.Type,k.Sector,k.Days);
     }
+    FuturesSaveCurrentLinks(futures.CurrentLinks); 
 }
+
+
+//save the links of the current run
+void UpTreeSaveCurrentLinks()
+    {
+        
+        using (StreamWriter writer = new StreamWriter("EventLinks.txt",true))  //set the stream writer to append mode everytime
+        {
+            foreach (var k in uptree.CurrentLinks)
+            {   
+            writer.WriteLine(k); //save only the link, so this can be used to filter which ones are new later
+            }
+        }
+        
+    }
+
+void FuturesSaveCurrentLinks(List<string> listOfLinks)
+    {
+        using (StreamWriter writer = new StreamWriter("EventLinks2.txt",false)) //overwrite mode so it removes the exisiting links in the file
+        {
+            foreach (string link in listOfLinks)
+            {
+                writer.WriteLine(link);
+            }
+        }
+    }
+
 
 async Task Recovery()
 {
@@ -122,7 +151,7 @@ async Task Recovery()
     try
     {
         
-        string current;
+        string? current;
         List<string> failEvents = new List<string>();
         
         using (StreamReader reader = new StreamReader("failedEvents.txt"))
@@ -168,10 +197,16 @@ async Task Recovery()
                     }
                         }
                     }
-                    
+            }
+            using (StreamWriter writer = new StreamWriter("failedEvents.txt"))
+            {
+                foreach (string i in stillFails)
+                {
+                    writer.WriteLine(i);
+                }
             }
                     
-                 
+                               
         
     }
     
@@ -181,13 +216,7 @@ async Task Recovery()
     }
 
 
-    using (StreamWriter writer = new StreamWriter("failedEvents.txt"))
-    {
-        foreach (string i in stillFails)
-        {
-            writer.WriteLine(i);
-        }
-    }
+    
 }
 
 await UpTree();
@@ -195,6 +224,7 @@ await UpTree();
 await FuturesForAll();
 
 await Recovery();
+
 
 
 
