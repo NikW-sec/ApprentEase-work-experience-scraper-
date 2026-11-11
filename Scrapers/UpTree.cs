@@ -17,7 +17,7 @@ public class UpTreeScraper
 
 
 
-    List<string> CurrentLinks = new List<string>();  //store links of this run
+    public List<string> CurrentLinks = new List<string>();  //store links of this run
 
 
 
@@ -175,20 +175,7 @@ public class UpTreeScraper
     }
 
 
-    //save the links of the current run
-    void SaveCurrentLinks()
-    {
-        
-        
-        using (StreamWriter writer = new StreamWriter("EventLinks.txt",true))  //set the stream writer to append mode everytime
-        {
-            foreach (var k in CurrentLinks)
-            {   
-            writer.WriteLine(k); //save only the link, so this can be used to filter which ones are new later
-            }
-        }
-        
-    }
+    
 
 
 
@@ -218,11 +205,7 @@ public class UpTreeScraper
         GetLastRun();
         await scraping();  // there is pause in this method so awair allows waiting
         //displayEvents();
-        if (FailedPages.Count ==0)  //only clear when there is no fail pages, because if links are cleared when some pages failed, it will count the old ones that aren't loaded as new
-        {
-            ClearLinks();
-        }
-        SaveCurrentLinks();
+
         Console.WriteLine(NumberAndError());
         
 
