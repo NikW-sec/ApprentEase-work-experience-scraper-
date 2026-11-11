@@ -51,7 +51,7 @@ public class FuturesForAllScraper
     }
 
     List<string> PreviousLinks = new List<string>(); //links of last run
-    List<string> CurrentLinks = new List<string>();
+    public List<string> CurrentLinks = new List<string>();
 
     public List<Event> listOfEvents = new List<Event>(); //store event object, each representing one event
     bool? scrap(string json) //this method is to scrap the event details from the json file and store them in a list
@@ -90,16 +90,7 @@ public class FuturesForAllScraper
         return NextPage; //boolean, if there is next page or now
     }
 
-    void UploadNewLinks(List<string> listOfLinks)
-    {
-        using (StreamWriter writer = new StreamWriter("EventLinks2.txt",false)) //overwrite mode so it removes the exisiting links in the file
-        {
-            foreach (string link in listOfLinks)
-            {
-                writer.WriteLine(link);
-            }
-        }
-    }
+   
 
 
 
@@ -148,7 +139,7 @@ public class FuturesForAllScraper
         }
         while(scrap(json) == true); //scrap returns true if there is next page
         
-        UploadNewLinks(CurrentLinks); 
+        
         
 
 
