@@ -1,1 +1,19 @@
+name: Build scraper
 
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build scraper
+        run: dotnet build "Scrapers/ApprentEase Scraper.csproj" --configuration Release
