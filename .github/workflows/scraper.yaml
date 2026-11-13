@@ -22,6 +22,6 @@ jobs:
       dotnet-version: '10.0.x'
    
    - name: Running code
-     run: dotnet run --project ./Scraper/Scraper.csproj  #run the program
+     run: dotnet run --project "Scrapers/ApprentEase Scraper.csproj"  #run the program and points to the file path
      env:
        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  #pass in the environmental variable
