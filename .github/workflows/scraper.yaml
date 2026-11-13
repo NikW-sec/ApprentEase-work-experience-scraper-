@@ -1,1 +1,27 @@
+name: auto scraping #name of action
 
+permissions:
+  contents: read  #premission to read the repo
+
+on: 
+  workflow_dispatch:  #allow manual run
+  schedule:
+   - cron: '00 10 * * 1' #run 10am every monday
+     timezone: 'Europe/London' 
+
+jobs:
+ scrape: #name of the job
+  runs-on: ubuntu-latest  #runs on ubuntus os
+  steps:
+   - name: Download code
+     uses: actions/checkout@v7  #resuable action that downloads the code of the repo
+    
+   - name: setup .NET
+     uses: actions/setup-dotnet@v6   #set up dotnet environment
+     with:
+      dotnet-version: '10.0.x'
+   
+   - name: Running code
+     run: dotnet run --project ./Scraper/Scraper.csproj  #run the program
+     env:
+       DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  #pass in the environmental variable
