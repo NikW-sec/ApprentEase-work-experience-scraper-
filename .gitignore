@@ -1,15 +1,4 @@
-# Generated build files
-bin/
-obj/
-
-# Local events history, used to store links of previous runs
+# events history, used to store links of previous runs
 EventLinks.txt
+EventLinks2.txt
 
-
-.env
-local.settings.json
-
-
-.vs/
-*.user
-*.suo
