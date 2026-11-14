@@ -1,7 +1,7 @@
 name: auto scraping #name of action
 
 permissions:
-  contents: read  #premission to read the repo
+  contents: write #premission to write the repo. This is needed because the links need to be writen to the text file in the data branch
 
 on: 
   workflow_dispatch:  #allow manual run
@@ -15,13 +15,43 @@ jobs:
   steps:
    - name: Download code
      uses: actions/checkout@v7  #resuable action that downloads the code of the repo
+     with:
+      ref: main  #download from main branch
+     
+   - name: Download data
+     uses: actions/checkout@v7 
+     with:
+       ref: data   #download from data branch
+       path: links   #store the downloads as a folder call links, used to seperate downloads from the main branch
     
    - name: setup .NET
      uses: actions/setup-dotnet@v6   #set up dotnet environment
      with:
       dotnet-version: '10.0.x'
-   
+      
+   - name: making data accessible   #currently, the two text files are inside the links folder but the c# program expect to see it directly. This is to move the file to a level where it is accessible by the program
+     run: |
+       cp links/EventLinks.txt EventLinks.txt   #cp is a linux command I learned before, it copies a file, cp <from file> <to file>, can also use it to rename file
+       #can use mv to just move the file but have to write and save the file back to the data branch later so cp is more efficent
+       cp links/EventLinks2.txt EventLinks2.txt 
+       
    - name: Running code
      run: dotnet run --project "Scrapers/ApprentEase Scraper.csproj"  #run the program and points to the file path
      env:
        DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}  #pass in the environmental variable
+   
+   - name: sync the two text files
+     run: |
+      #this will update the two text file inside links, because the file path already exist, it will replace the old file content with the new one.
+      cp EventLinks.txt links/EventLinks.txt
+      cp EventLinks2.txt links/EventLinks2.txt 
+   - name: set up git commit
+     working-directory: links
+     #github require a username and email when commiting 
+     run: |
+      git config user.name "scraper bot"   #set up the author of the commit to be scraper bot
+      git config user.email "41898282+github-actions[bot]@users.noreply.github.com" #github's offical bot email, can use my own email as well but no need
+      git add EventLinks.txt EventLinks2.txt   #tells git this is the two file that should be in the next commit 
+      git commit -m "updating event links" ||true #this only save changes locally, the -m declared the commit message
+      # || true needed because if there is no new events, the files will have no change
+      git push  #push the commit to github
