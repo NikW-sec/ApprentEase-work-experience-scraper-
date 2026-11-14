@@ -123,11 +123,11 @@ async Task FuturesForAll()
 void UpTreeSaveCurrentLinks()
     {
         
-        using (StreamWriter writer = new StreamWriter("EventLinks.txt",true))  //set the stream writer to append mode everytime
+        using (StreamWriter writer = new StreamWriter("EventLinks.txt",false))  //overwrite mode so it removes the exisiting links in the file
         {
             foreach (var k in uptree.CurrentLinks)
             {   
-            writer.WriteLine(k); //save only the link, so this can be used to filter which ones are new later
+             writer.WriteLine(k); //save only the link, so this can be used to filter which ones are new later
             }
         }
         
@@ -135,7 +135,7 @@ void UpTreeSaveCurrentLinks()
 
 void FuturesSaveCurrentLinks(List<string> listOfLinks)
     {
-        using (StreamWriter writer = new StreamWriter("EventLinks2.txt",false)) //overwrite mode so it removes the exisiting links in the file
+        using (StreamWriter writer = new StreamWriter("EventLinks2.txt",false)) 
         {
             foreach (string link in listOfLinks)
             {
