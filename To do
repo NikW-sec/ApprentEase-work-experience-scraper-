@@ -1,10 +1,5 @@
--deploy to azure
+-deploy to azure as alternate method
 -change .gitignore
 -new file listing download requirements
-
-stages
-1.individual scraper
-2.Program.cs to work as one code/file
-3.Linked to discord test server 
-4.Testing using webhook was sucessful
-5.Designing the discord output card
+-seperate space to store the two text files
+-takes in multiple webhook link
