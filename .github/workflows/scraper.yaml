@@ -34,6 +34,7 @@ jobs:
        cp links/EventLinks.txt EventLinks.txt   #cp is a linux command I learned before, it copies a file, cp <from file> <to file>, can also use it to rename file
        #can use mv to just move the file but have to write and save the file back to the data branch later so cp is more efficent
        cp links/EventLinks2.txt EventLinks2.txt 
+       cp links/failedEvents.txt failedEvents.txt  #this file for storing the ones that aren't sent sucessfully
        
    - name: Running code
      run: dotnet run --project "Scrapers/ApprentEase Scraper.csproj"  #run the program and points to the file path
@@ -45,13 +46,14 @@ jobs:
       #this will update the two text file inside links, because the file path already exist, it will replace the old file content with the new one.
       cp EventLinks.txt links/EventLinks.txt
       cp EventLinks2.txt links/EventLinks2.txt 
+      cp failedEvents.txt links/failedEvents.txt
    - name: set up git commit
      working-directory: links
      #github require a username and email when commiting 
      run: |
       git config user.name "scraper bot"   #set up the author of the commit to be scraper bot
       git config user.email "41898282+github-actions[bot]@users.noreply.github.com" #github's offical bot email, can use my own email as well but no need
-      git add EventLinks.txt EventLinks2.txt   #tells git this is the two file that should be in the next commit 
+      git add EventLinks.txt EventLinks2.txt failedEvents.txt  #tells git this is the three file that should be in the next commit 
       git commit -m "updating event links" ||true #this only save changes locally, the -m declared the commit message
       # || true needed because if there is no new events, the files will have no change
       git push  #push the commit to github
