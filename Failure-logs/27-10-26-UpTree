@@ -1,3 +1,0 @@
-Run time error unhandled
-Problem = no handling of run time error, causing the program to crash
-Solution = added another catch loop alongside http request (404)
