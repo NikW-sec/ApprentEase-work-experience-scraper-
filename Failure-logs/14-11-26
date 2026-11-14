@@ -1,0 +1,3 @@
+github action crash
+reason: there are no new events so no change to file and it refuses to commit
+solution: added || true after the command so if there is no change, it would treat commit as sucessful and won't crash the workflow
